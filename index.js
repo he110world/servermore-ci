@@ -5,7 +5,7 @@ const fs = require('fs')
 const argv = require('optimist').argv
 const opts = {
 	port:argv.p || argv.port || 8081,
-	dir:path.resolve((argv.d || argv.dir || './').toString()),
+	dir:path.resolve((argv._[0] || './').toString()),
 	gitHost:url.parse(argv.g || argv.git || 'http://localhost')
 }
 
@@ -77,13 +77,16 @@ router.post('/push', async (ctx,next)=>{
 router.post('/clone', async (ctx,next)=>{
 	const req = ctx.request.body
 
+	console.log(req)
+
 	if (req.path) {
+
 		const url_info = url.parse(req.path)
 		const dir = url_info.path.split('/').slice(0,3).join('/')
 		const dir_name = path.join(opts.dir, dir)
 		if (!fs.existsSync(dir_name)) {
 			const url_obj = {
-				protocol:url_info.protocol,
+				protocol:url_info.protocol||'http',
 				hostname:opts.gitHost.hostname,
 				pathname:dir+'.git',
 				port:opts.gitHost.port
