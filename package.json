@@ -1,6 +1,6 @@
 {
   "name": "servermore-ci",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "bin": {
@@ -10,9 +10,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "he110world@126.com",
+  "license": "MIT",
   "dependencies": {
+    "ip": "^1.1.5",
     "isomorphic-git": "^0.54.1",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
