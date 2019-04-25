@@ -77,6 +77,9 @@ Local repo: ${opts.dir}
 Hooks:
 	http://${ip_port}/hook/gogs/push
 	http://${ip_port}/hook/sm
+
+Dashboard:
+	http://${ip_port}/dashboard
 `
 	console.log(msg)
 })
@@ -151,27 +154,28 @@ function parse_git_cmd(cmd){
 
 const checkout_dict = {}
 
-async function git_checkout(res){
-	if (!checkout_dict[res.dir]) {
-		await git.checkout(res)
-		checkout_dict[res.dir] = true
-	}
-}
-
-async function git_clone(res){
-	await git.clone(res)
-	checkout_dict[res.dir] = true
-}
-
 router.post('/hook/sm', async (ctx,next)=>{
 	const res = parse_git_cmd(ctx.request.body)
 	res.ref = opts.branch
 
-	if (fs.existsSync(res.dir)) {
-		await git_checkout(res)
-	} else {
-		//otherwise clone
-		await git_clone(res)
+	if (!checkout_dict[res.dir]) {
+		if (fs.existsSync(res.dir)) {
+			const b = await git.currentBranch(res)
+			if (b !== opts.branch) {
+				await git.checkout(res)
+			}
+		} else {
+			await git.clone(res)
+		}
+		checkout_dict[res.dir] = true
 	}
+
 	ctx.body = ''
 })
+
+//后台
+router.get('/dashboard', async (ctx,next)=>{
+	ctx.body = 'dashboard'
+})
+
+
