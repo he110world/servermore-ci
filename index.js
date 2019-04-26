@@ -174,8 +174,6 @@ router.post('/hook/sm', async (ctx,next)=>{
 })
 
 //后台
-router.get('/dashboard', async (ctx,next)=>{
-	ctx.body = 'dashboard'
-})
-
+const dashboard = require('./dashboard')
+dashboard(router)
 

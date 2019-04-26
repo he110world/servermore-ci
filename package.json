@@ -13,6 +13,7 @@
   "author": "he110world@126.com",
   "license": "MIT",
   "dependencies": {
+    "imgui": "^1.0.0",
     "ip": "^1.1.5",
     "isomorphic-git": "^0.54.1",
     "koa": "^2.7.0",
@@ -21,6 +22,7 @@
     "koa-logger": "^3.2.0",
     "koa-onerror": "^4.1.0",
     "koa-router": "^7.4.0",
+    "mime": "^2.4.2",
     "mkdirp": "^0.5.1",
     "optimist": "^0.6.1"
   }
