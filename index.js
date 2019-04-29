@@ -14,7 +14,7 @@ opt
 .string('p').demand('p').alias('p','password').describe('p','Git password')
 .default('P',8081).alias('P','port').describe('P','Listening port')
 .boolean('h').alias('h','help').describe('h','Show this help and exit')
-.string('b').alias('b','branch').default('b','master').describe('b','Branch to watch')
+//.string('b').alias('b','branch').default('b','master').describe('b','Branch to watch')
 .argv
 
 if (argv.h) {
@@ -22,13 +22,18 @@ if (argv.h) {
 	process.exit(0)
 }
 
+const ip = require('ip')
+const ip_addr = ip.address()
+const ip_port = `${ip_addr}:${argv.port}`
+
 const opts = {
 	port:	argv.port,
 	dir:	path.resolve(String(argv._[0] || './')),
 	git:	url.parse(argv.g),
 	username:	argv.username,
 	password:	argv.password,
-	branch:	argv.branch
+	git_hook:	`http://${ip_port}/hook/gogs/push`
+	//branch:	argv.branch
 }
 
 //create target directory if not exist
@@ -44,6 +49,7 @@ const json = require('koa-json')
 const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
+const formidable = require('koa2-formidable')
 
 const git = require('isomorphic-git')
 git.plugins.set('fs',fs)
@@ -51,6 +57,7 @@ git.plugins.set('fs',fs)
 onerror(app)
 app
 .use(logger())
+.use(formidable())
 .use(bodyparser())
 .use(json())
 .use(router.routes())
@@ -60,15 +67,10 @@ app.on('error', (err, ctx)=>{
 	console.error('server error', err)
 })
 
-const ip = require('ip')
-const ip_addr = ip.address()
-const ip_port = `${ip_addr}:${opts.port}`
 app.listen(opts.port, () => {
 	const msg = 
 `
 Servermore-ci is up and running.
-
-Switched to branch "${opts.branch}"
 
 Git server: ${opts.git.href}
 
@@ -112,7 +114,7 @@ function parse_gogs_msg(msg){
 router.post('/hook/gogs/push', async (ctx,next)=>{
 	try{
 		const p = parse_gogs_msg(ctx.request.body)
-		if (p.branch === opts.branch) {
+		//if (p.branch === opts.branch) {
 			console.log(' [HOOK]\n',p)
 
 			//found repo. pull
@@ -122,7 +124,7 @@ router.post('/hook/gogs/push', async (ctx,next)=>{
 			} else {
 				console.log(p.name,'doesn\'t exist. Ignore.')
 			}
-		}
+		//}
 		ctx.body = ''
 	}catch(e){
 		console.log(e)
@@ -152,12 +154,15 @@ function parse_git_cmd(cmd){
 	return res
 }
 
-const checkout_dict = {}
+//const checkout_dict = {}
+
+const clone_dict = {}
 
 router.post('/hook/sm', async (ctx,next)=>{
 	const res = parse_git_cmd(ctx.request.body)
-	res.ref = opts.branch
+	//res.ref = opts.branch
 
+	/*
 	if (!checkout_dict[res.dir]) {
 		if (fs.existsSync(res.dir)) {
 			const b = await git.currentBranch(res)
@@ -169,11 +174,17 @@ router.post('/hook/sm', async (ctx,next)=>{
 		}
 		checkout_dict[res.dir] = true
 	}
-
+       */
+      	if (!clone_dict[res.dir]) {
+		if (!fs.existsSync(res.dir)) {
+			await git.clone(res)
+		}
+		clone_dict[res.dir] = true
+	}
 	ctx.body = ''
 })
 
 //后台
 const dashboard = require('./dashboard')
-dashboard(router)
+dashboard(router, opts)
 
